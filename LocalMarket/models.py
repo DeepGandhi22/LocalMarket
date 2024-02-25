@@ -4,6 +4,8 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
+from vendor.models import shop
+
 # Create your models here.
 class Product(models.Model):
     product_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -27,3 +29,14 @@ class Customer(User):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+class Order(models.Model):
+    order_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    shop_id = models.ForeignKey(shop, on_delete=models.CASCADE)
+    order_status_choices = [('0', 'Cancelled'), ('1', 'Placed'), ('2', 'Shipped'), ('3', 'Delivered')]
+    order_status = models.CharField(max_length=1, choices=order_status_choices, default='1')
+    total_amount = models.FloatField()
+    user_id = models.ForeignKey(Customer, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.user_id.first_name + " " + self.order_id
