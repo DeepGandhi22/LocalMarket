@@ -11,7 +11,7 @@ class Product(models.Model):
     product_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product_name = models.CharField(max_length=200)
     category_name = models.CharField(max_length=200)
-    quantity = models.IntegerField(validators=[MinValueValidator(0)])
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
     amount = models.FloatField(validators=[MinValueValidator(0)])
     description = models.TextField()
 
@@ -35,8 +35,18 @@ class Order(models.Model):
     shop_id = models.ForeignKey(shop, on_delete=models.CASCADE)
     order_status_choices = [('0', 'Cancelled'), ('1', 'Placed'), ('2', 'Shipped'), ('3', 'Delivered')]
     order_status = models.CharField(max_length=1, choices=order_status_choices, default='1')
-    total_amount = models.FloatField()
+    total_amount = models.FloatField(validators=[MinValueValidator(0)])
     user_id = models.ForeignKey(Customer, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.user_id.first_name + " " + self.order_id
+
+class OrderItem(models.Model):
+    OrderItem_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order_id = models.ForeignKey(shop, on_delete=models.CASCADE)
+    product_id = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
+    amount = models.FloatField(validators=[MinValueValidator(0)])
+
+    def __str__(self):
+        return f"OrderItem: {self.product_id.product_name} for Order ID: {self.order_id}"
