@@ -6,6 +6,9 @@ from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from vendor.models import shop
 
+
+
+
 # Create your models here.
 class Product(models.Model):
     product_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -50,3 +53,16 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"OrderItem: {self.product_id.product_name} for Order ID: {self.order_id}"
+
+
+class Payment(models.Model):
+    payment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order_id = models.ForeignKey(Order, on_delete=models.CASCADE)
+    payment_status_choices = [('Pending', 'Pending'), ('Completed', 'Completed'), ('Failed', 'Failed')]
+    payment_status = models.CharField(max_length=20, choices=payment_status_choices)
+    date = models.DateField()
+    payment_amount = models.PositiveIntegerField(validators=[MinValueValidator(0)])
+    user_id = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Payment ID: {self.payment_id}"
