@@ -12,23 +12,27 @@ from vendor.models import shop
 # Create your models here.
 class Product(models.Model):
     product_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    shop_id = models.ForeignKey(shop, on_delete=models.CASCADE, default=None)
     product_name = models.CharField(max_length=200)
-    category_name = models.CharField(max_length=200)
+    category_choices = [('food_bevarages', 'Food and Bevarages'), ('fruits_veg', 'Fruits and Vegetables'), ('dairy', 'Dairy'), ('other', 'Other') ]
+    category = models.CharField(max_length=14,choices=category_choices, default=None)
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
-    amount = models.FloatField(validators=[MinValueValidator(0)])
+    price = models.FloatField(validators=[MinValueValidator(0)])
     description = models.TextField()
 
     def __str__(self):
-        return self.product_name
+        return self.product_name + " : " + self.shop_id.shop_name
 
 class Customer(User):
     customer_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    address = models.CharField(max_length=200, null=False, blank=False)
     phone_regex = (RegexValidator
                    (regex=r'^\d{10}$',
                     message="The phone number should be of 10 digits long"))
 
     phone_number = models.CharField(validators=[phone_regex], max_length=10, null=True, blank=True)
+    address = models.CharField(max_length=200, default=None)
+    city = models.CharField(max_length=100, default=None)
+    zip_code = models.CharField(max_length=20, default=None)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -36,23 +40,36 @@ class Customer(User):
 class Order(models.Model):
     order_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     shop_id = models.ForeignKey(shop, on_delete=models.CASCADE)
-    order_status_choices = [('0', 'Cancelled'), ('1', 'Placed'), ('2', 'Shipped'), ('3', 'Delivered')]
-    order_status = models.CharField(max_length=1, choices=order_status_choices, default='1')
-    total_amount = models.FloatField(validators=[MinValueValidator(0)])
+    order_status_choices = [('Ongoing', 'Ongoing'), ('Cancelled', 'Cancelled'), ('Placed', 'Placed'), ('Shipped', 'Shipped'), ('Delivered', 'Delivered')]
+    order_status = models.CharField(max_length=9, choices=order_status_choices, default='Ongoing')
+    total_amount = models.FloatField(validators=[MinValueValidator(0)], null=True, blank=True)
     user_id = models.ForeignKey(Customer, on_delete=models.CASCADE)
-
+    delivery_address = models.CharField(max_length=200, default=None)
+    delivery_city = models.CharField(max_length=100, default=None)
+    delivery_zip_code = models.CharField(max_length=20, default=None)
     def __str__(self):
-        return self.user_id.first_name + " " + self.order_id
+        return self.user_id.first_name + " " + self.total_amount.__str__()
+
+    def save(self, *args, **kwargs):
+        self.delivery_address = self.user_id.address
+        self.delivery_city = self.user_id.city
+        self.delivery_zip_code = self.user_id.zip_code
+        super().save(*args, **kwargs)
+
 
 class OrderItem(models.Model):
-    OrderItem_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    order_id = models.ForeignKey(shop, on_delete=models.CASCADE)
+    orderItem_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, default=None)
     product_id = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
-    amount = models.FloatField(validators=[MinValueValidator(0)])
+    order_quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
+    amount = models.FloatField(validators=[MinValueValidator(0)], default=None, null=True, blank=True)
 
     def __str__(self):
-        return f"OrderItem: {self.product_id.product_name} for Order ID: {self.order_id}"
+        return f"OrderItem: {self.product_id.product_name} for Order ID: {self.order}"
+
+    def save(self, *args, **kwargs):
+        self.amount = self.order_quantity * self.product_id.price
+        super().save(*args, **kwargs)
 
 
 class Payment(models.Model):
