@@ -103,3 +103,57 @@ def editShop(request, pk):
 
 
     return render(request, 'vendor/edit_product_shop_vendor_form.html', {'form': form, 'user_role': user_role, 'page': page, 'shop_e': shop_e})
+
+@login_required(login_url='loginVendor')
+def createProduct(request, pk):
+    page = 'createProduct'
+    user_role = 'vendor'
+
+    shop_p = shop.objects.get(shop_id=pk)
+    # vendor_p = vendor.objects.get(username=request.user.username)
+
+    form = ProductForm()
+    if request.method == 'POST':
+        form = ProductForm(request.POST)
+        if form.is_valid():
+            product = form.save(commit=False)
+            product.shop_id = shop_p
+            product.save()
+
+            messages.success(request, ' Product added successfully!')
+            return redirect('shopview', pk=shop_p.shop_id)
+
+    return render(request, 'vendor/create_shop_product.html', {'page': page, 'form': form, 'user_role': user_role})
+
+@login_required(login_url='loginVendor')
+def editProduct(request, pk):
+
+    page = 'editProduct'
+    user_role = 'vendor'
+    product = Product.objects.get(product_id=pk)
+    form = ProductForm(instance=product)
+
+    if request.method == 'POST':
+        form = ProductForm(request.POST, instance=product)
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, 'Changes saved successfully.')
+            return redirect('vendorprofile')
+
+
+    return render(request, 'vendor/edit_product_shop_vendor_form.html', {'form': form, 'user_role': user_role, 'page': page})
+
+
+@login_required(login_url='loginVendor')
+def deleteProduct(request, pk):
+
+    product = Product.objects.get(product_id=pk)
+    if request.method == 'POST':
+        product.delete()
+        messages.success(request, 'Skill was deleted successfully!')
+        return redirect('vendorprofile')
+
+    context = {'object': product}
+    return render(request, 'delete_template.html', context)
+
