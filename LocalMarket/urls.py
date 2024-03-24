@@ -3,6 +3,10 @@ from . import views
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
+    path('login/', views.loginUser, name='loginUser'),
+    path('', views.homepage, name='homepage'),
+    path('register/', views.createUser, name='registerUser'),
+    path('logout/', views.logoutUser, name='logoutUser'),
 
     path('checkout/<str:pk>/', views.checkout, name='checkout'),
     path('checkoutconfirmation/<str:pk>/', views.checkout_confirmation, name='checkout_confirmation'),
