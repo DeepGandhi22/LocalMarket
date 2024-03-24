@@ -63,3 +63,25 @@ def confirmation(request):
     # order_item1 = Order.objects.get(order_id=pk,order_status='Placed')
     user_role = "customer"
     return render(request,'LocalMarket/confirmation.html',{'user_role': user_role, 'page': page})
+
+
+@login_required(login_url='loginUser')
+def megacart(request):
+    page = 'Megacart'
+    customer = request.user
+    print(request.user)
+    customer_c = Customer.objects.get(username=customer)
+    all_orders = []
+    total_order = Order.objects.filter(user_id= customer_c.customer_id , order_status='Ongoing')
+    print(all_orders)
+    user_role = "customer"
+    return render(request,'LocalMarket/megacart.html',{'total_order':total_order, 'page': page, 'user_role': user_role})
+
+
+@login_required(login_url='loginUser')
+def megacart_confirmation(request, pk):
+    order = get_object_or_404(Order,order_id=pk, order_status='Ongoing')
+    if request.method == 'POST':
+        order.order_status = 'Cancelled' # order_delete
+        order.save()
+        return redirect(reverse('megacart'))
