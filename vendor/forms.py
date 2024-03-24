@@ -26,3 +26,15 @@ class ProductForm(ModelForm):
 
         for name, field in self.fields.items():
             field.widget.attrs.update({'class': 'form-control'})
+
+class ShopForm(ModelForm):
+    class Meta:
+        model = shop
+        fields = ['shop_name', 'gst_no', 'shop_image', 'shop_address', 'shop_city', 'shop_zip_code']
+        labels = {'shop_name': 'Shop Name', 'gst_no': 'GST No', 'shop_image': 'Shop Image', 'shop_city': 'City', 'shop_zip_code': 'Zip Code'}
+
+    def __init__(self, *args, **kwargs):
+        super(ShopForm, self).__init__(*args, **kwargs)
+
+        for name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})

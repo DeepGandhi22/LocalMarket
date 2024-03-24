@@ -12,6 +12,7 @@ urlpatterns = [
     path('checkoutconfirmation/<str:pk>/', views.checkout_confirmation, name='checkout_confirmation'),
     path('confirmation/', views.confirmation, name='confirmation'),
     path('megacart/', views.megacart, name='megacart'),
-    path('megaconfirmatory/<str:pk>/', views.megacart_confirmation, name='megacart_confirmation')
+    path('megaconfirmatory/<str:pk>/', views.megacart_confirmation, name='megacart_confirmation'),
+    path('productdetails/<str:pk>',views.productdetails,name='productdetails'),
 
 ]

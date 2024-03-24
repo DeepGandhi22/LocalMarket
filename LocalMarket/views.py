@@ -177,3 +177,7 @@ def megacart_confirmation(request, pk):
         order.order_status = 'Cancelled' # order_delete
         order.save()
         return redirect(reverse('megacart'))
+
+def productdetails(request,pk):
+    product = Product.objects.get(product_id=pk)
+    return render(request,'LocalMarket/productdetail.html',{'product':product})
