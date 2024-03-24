@@ -29,3 +29,28 @@ def shopview(request, pk):
     products, search_query = searchproducts(request, pk)
     return render(request, 'vendor/shopview_inventory.html', {'page':page, 'shop':shop_n, 'products':products, 'search_query':search_query, 'user_role': user_role})
 
+@login_required(login_url='loginVendor')
+def editprofileVendor(request):
+    page = 'editProfileVendor'
+    user_role = 'vendor'
+    vendor_n = request.user
+    vendor_v = vendor.objects.get(username=vendor_n.username)
+    form = ProfileVendorForm(instance=vendor_v)
+
+    if request.method == 'POST':
+        form = ProfileVendorForm(request.POST, instance=vendor_v)
+        print(form.is_valid())
+        if form.is_valid():
+            form.save()
+            return redirect('vendorprofile')
+
+    context = {'form': form, 'vendor': vendor_v, 'user_role': user_role, 'page': page}
+    return render(request, 'vendor/edit_product_shop_vendor_form.html', context)
+
+
+def vendorProfile(request):
+    page = 'vendorProfile'
+    user_role = 'vendor'
+    vendor_user = vendor.objects.get(username=request.user.username)
+    shops = vendor_user.shop_set.all()
+    return render(request, 'vendor/vendorProfile.html', {'page':page, 'user_role':user_role, 'vendor_user':vendor_user, 'shops':shops})
