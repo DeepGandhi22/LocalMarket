@@ -1,5 +1,16 @@
-from django.shortcuts import render
-
+from django.shortcuts import render,redirect
+from django.contrib.auth.models import User
+from django.contrib.auth import login, authenticate, logout
+from django.http import HttpResponse, HttpResponseBadRequest
+from django.contrib import messages
+from .forms import VendorUserForm, ShopForm, ProductForm, ProfileVendorForm
+from LocalMarket.models import Customer
+from django.contrib.auth import views as auth_views
+from .models import vendor, shop
+from LocalMarket.models import Product
+from .utils import searchproducts, finaltotal
+# Create your views here.
+from django.contrib.auth.decorators import login_required
 
 @login_required(login_url='loginVendor')
 def inventory(request, pk):
@@ -54,3 +65,41 @@ def vendorProfile(request):
     vendor_user = vendor.objects.get(username=request.user.username)
     shops = vendor_user.shop_set.all()
     return render(request, 'vendor/vendorProfile.html', {'page':page, 'user_role':user_role, 'vendor_user':vendor_user, 'shops':shops})
+
+# --------------- Shop VIEWS ----------------------
+@login_required(login_url='loginVendor')
+def createShop(request):
+    page = 'createShop'
+    user_role = 'vendor'
+
+    vendor_shop = vendor.objects.get(username=request.user.username)
+
+    form = ShopForm()
+    if request.method == 'POST':
+        form = ShopForm(request.POST)
+        if form.is_valid():
+            shop = form.save(commit=False)
+            shop.vendor_id = vendor_shop
+            shop.save()
+            messages.success(request, 'Shop was added successfully!')
+            return redirect('homepage')
+
+    return render(request, 'vendor/create_shop_product.html', {'page':page, 'form':form, 'user_role': user_role})
+
+@login_required(login_url='loginVendor')
+def editShop(request, pk):
+
+    page = 'editShop'
+    user_role = 'vendor'
+    shop_e = shop.objects.get(shop_id=pk)
+    form = ShopForm(instance=shop_e)
+
+    if request.method == 'POST':
+        form = ShopForm(request.POST, request.FILES, instance=shop_e)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Shop changes saved successfully.')
+            return redirect('vendorprofile')
+
+
+    return render(request, 'vendor/edit_product_shop_vendor_form.html', {'form': form, 'user_role': user_role, 'page': page, 'shop_e': shop_e})
