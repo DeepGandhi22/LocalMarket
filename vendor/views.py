@@ -285,3 +285,29 @@ def productdetails(request,pk):
                     order_item.save()
                     messages.success(request, "Updated cart successfully")
     return render(request, 'vendor/productdetail.html', {'product':product, 'form':form, 'shop':shop, 'user_role':user_role})
+
+def orderhistory(request, pk):
+    page = 'orderhistory'
+    order_data , final_amount = finaltotal(request, pk)
+
+    return render(request, 'vendor/orderhistory.html', {'order_data': order_data,'final_total_amount':final_amount})
+
+@login_required(login_url='loginUser')
+def cart(request,pk):
+    page = 'cart'
+    user_role = 'customer'
+    order_item = Order.objects.get(order_id=pk, order_status = 'Ongoing')
+    orderitems = order_item.orderitem_set.all()
+    no_of_items = len(order_item.orderitem_set.all())
+    delivery = 5
+    orderitemamount = 0
+    orderwith_product=[]
+    for orderitem in orderitems:
+        orderitemamount = orderitemamount + float(orderitem.amount)
+    print(orderitemamount)
+    gst = round(float(orderitemamount) * 0.13, 2)
+    total = gst + delivery + orderitemamount
+    return render(request, 'vendor/cart.html',
+                  {'orderwith_product':orderwith_product, 'orderitems':orderitems, 'page': page, 'no_of_items': no_of_items, 'order_item': order_item, 'delivery': delivery,
+                   'orderitemamount': orderitemamount,'gst': gst, 'total': total, 'user_role': user_role})
+
