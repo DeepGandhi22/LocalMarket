@@ -1,6 +1,6 @@
 from django.forms import ModelForm
 from .models import vendor, shop
-from LocalMarket.models import Product
+from LocalMarket.LocalMarket.models import Product
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 
@@ -35,6 +35,17 @@ class ShopForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ShopForm, self).__init__(*args, **kwargs)
+
+        for name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})
+
+class ProfileVendorForm(ModelForm):
+    class Meta:
+        model = vendor
+        fields = ['first_name', 'last_name', 'email', 'username', 'phone_number']
+
+    def __init__(self, *args, **kwargs):
+        super(ProfileVendorForm, self).__init__(*args, **kwargs)
 
         for name, field in self.fields.items():
             field.widget.attrs.update({'class': 'form-control'})
