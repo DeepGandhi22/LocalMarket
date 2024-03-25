@@ -222,3 +222,17 @@ def deleteProduct(request, pk):
     context = {'object': product}
     return render(request, 'delete_template.html', context)
 
+#------ CART VIEWS ---->
+
+def create_ordetItem(request, pk):
+    page = 'shopview'
+
+    form = Cart_shopview()
+    product = Product.objects.get(product_id=pk)
+
+    if request.method == 'POST':
+        form = Cart_shopview(request.POST)
+        if form.is_valid:
+            cart = form.save(commit=False)
+            cart.product_id = product.product_id
+            cart.save()
