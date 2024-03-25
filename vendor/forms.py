@@ -49,3 +49,8 @@ class ProfileVendorForm(ModelForm):
 
         for name, field in self.fields.items():
             field.widget.attrs.update({'class': 'form-control'})
+
+class OrderIForm(ModelForm):
+    class Meta:
+        model = Order
+        fields = ['order_status']

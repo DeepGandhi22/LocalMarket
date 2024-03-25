@@ -236,3 +236,52 @@ def create_ordetItem(request, pk):
             cart = form.save(commit=False)
             cart.product_id = product.product_id
             cart.save()
+
+def productdetails(request,pk):
+    user_role = 'customer'
+    product = Product.objects.get(product_id=pk)
+    form = OrderIForm()
+    print('orderitem kuch nahi')
+    check_order_id = request.session.get('order.id')
+    print(check_order_id)
+    if check_order_id is None:
+        form = Order_ind_form()
+        print('login required')
+        if request.method == 'POST':
+            form = Order_ind_form(request.POST)
+            if form.is_valid():
+                messages.error(request, "Login First")
+                return redirect('loginUser')
+    else:
+        print('hello check')
+        order = Order.objects.get(order_id=request.session['order.id'])
+        check_order_item_id = request.session.get('order_item.id', None)
+        print(check_order_item_id)
+        if check_order_item_id is None:
+
+            print('orderfirst time////')
+            form = Order_ind_form()
+            if request.method == 'POST':
+                form = Order_ind_form(request.POST)
+                if form.is_valid():
+                    order_item = form.save(commit=False)
+                    order_item.product_id = product
+                    order_item.order = order
+                    print(order_item.order_quantity)
+                    order_item.save()
+                    request.session['order_item.id'] = str(order_item.orderItem_id)
+                    messages.success(request, "Added to cart successfully")
+        else:
+            print('orderitem second time')
+            order_item = OrderItem.objects.get(orderItem_id=request.session['order_item.id'])
+            form = Order_ind_form(instance=order_item)
+            if request.method == 'POST':
+                form = Order_ind_form(request.POST, instance=order_item)
+                if form.is_valid():
+                    order_item = form.save(commit=False)
+                    order_item.product_id = product
+                    order_item.order = order
+                    print(order_item.order_quantity)
+                    order_item.save()
+                    messages.success(request, "Updated cart successfully")
+    return render(request, 'vendor/productdetail.html', {'product':product, 'form':form, 'shop':shop, 'user_role':user_role})

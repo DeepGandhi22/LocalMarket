@@ -9,7 +9,13 @@ from django.contrib.auth import views as auth_views
 # Create your views here.
 from django.contrib.auth.decorators import login_required
 from .utils import searchshops
-from .models import Customer, Product, Order
+from .models import Customer
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.http import HttpResponse
+from LocalMarket.models import *
+from django.db.models import Sum
+from django.shortcuts import render
 
 
 # class PasswordResetView(auth_views.PasswordResetView):
@@ -181,3 +187,64 @@ def megacart_confirmation(request, pk):
 def productdetails(request,pk):
     product = Product.objects.get(product_id=pk)
     return render(request,'LocalMarket/productdetail.html',{'product':product})
+
+@login_required(login_url='loginUser')
+def purchasehistory(request,pk):
+    page = 'Purchase History'
+    user_role = 'customer'
+    order_items = Order.objects.filter(user_id=pk)
+    order_items_final = order_items.exclude(order_status='ongoing')
+    print(order_items_final)
+    orders_with_final_amount = []
+    for order in order_items_final:
+        orderitems = order.orderitem_set.all()
+        amount=0
+        for orderitem in orderitems:
+            amount =amount+float(orderitem.amount)
+        order.total_amount = str(amount)
+        tax_amount = round(float(order.total_amount) * 1.13, 2)
+        finalamount = 5 + tax_amount
+        order.save()
+        no_of_items = len(order.orderitem_set.all())
+        orders_with_final_amount.append({'order': order, 'finalamount': finalamount,'no_of_items':no_of_items})
+    return render(request,'LocalMarket/purchasehistory.html',{'orders_with_final_amount':orders_with_final_amount,'page': page,'user_role': user_role})
+
+
+@login_required(login_url='loginUser')
+def checkout(request, pk):
+    page = 'Checkout'
+    order_item = Order.objects.get(order_id=pk, order_status='Ongoing')
+    orderitems =  order_item.orderitem_set.all()
+    no_of_items = len(order_item.orderitem_set.all())
+    delivery = 5
+    amount = 0
+    for orderitem in orderitems:
+        amount =amount+float(orderitem.amount)
+    print(amount)
+    order_item.total_amount = str(amount)
+    # amount = order_item.total_amount
+    gst = round(float(amount) * 0.13, 2)
+    total = gst + delivery + amount
+    user_role = 'customer'
+    order_item.save()
+    return render(request, 'LocalMarket/checkout.html',
+                  {'page': page,'no_of_items': no_of_items, 'order_item': order_item, 'delivery': delivery, 'amount': amount,
+                   'gst': gst, 'total': total, 'user_role':user_role})
+
+@login_required(login_url='loginUser')
+def checkout_confirmation(request, pk):
+    order = get_object_or_404(Order, order_id=pk)
+    if request.method == 'POST':
+        order.order_status = 'Placed'
+        order.save()
+        return redirect(reverse('confirmation', args=[order.order_id]))
+    else:
+        return redirect(reverse('checkout', args=[pk]))
+
+@login_required(login_url='loginUser')
+def confirmation(request,pk):
+    order = get_object_or_404(Order, order_id=pk)
+    page = 'Confirmation'
+    # order_item1 = Order.objects.get(order_id=pk,order_status='Placed')
+    user_role = "customer"
+    return render(request,'LocalMarket/confirmation.html',{'order': order, 'user_role': user_role, 'page': page})
