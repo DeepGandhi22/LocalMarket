@@ -1,17 +1,19 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate, logout
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.contrib import messages
-from .forms import VendorUserForm, ShopForm, ProductForm, ProfileVendorForm
-from LocalMarket.models import Customer
+from .forms import VendorUserForm, ShopForm, ProductForm, ProfileVendorForm, Order_ind_form, OrderIForm
+from LocalMarket.models import Customer, Order, OrderItem
 from django.contrib.auth import views as auth_views
 from .models import vendor, shop
 from LocalMarket.models import Product
 from .utils import searchproducts, finaltotal
+from LocalMarket.forms import Cart_shopview
+
 # Create your views here.
 from django.contrib.auth.decorators import login_required
-
 
 
 # --------------- Vendor Profile VIEWS ----------------------
@@ -76,35 +78,6 @@ def logoutVendor(request):
     logout(request)
     return redirect('loginVendor')
 
-
-@login_required(login_url='loginVendor')
-def inventory(request, pk):
-    page = 'inventory'
-    user_role = 'vendor'
-
-    shop_p = shop.objects.get(shop_id=pk)
-    products, search_query = searchproducts(request, pk)
-    return render(request, 'vendor/shopview_inventory.html',
-                  {'page': page, 'shop': shop_p, 'products': products, 'search_query': search_query,
-                   'user_role': user_role})
-
-def shopview(request, pk):
-    page = 'shopview'
-
-    if request.user.is_authenticated:
-        try:
-            user_consumer = Customer.objects.get(username=request.user.username)
-            user_role = 'customer'
-        except:
-            user_consumer = vendor.objects.get(username=request.user.username)
-            user_role = 'vendor'
-        print(user_consumer)
-    print(user_role)
-
-    shop_n = shop.objects.get(shop_id=pk)
-    products, search_query = searchproducts(request, pk)
-    return render(request, 'vendor/shopview_inventory.html', {'page':page, 'shop':shop_n, 'products':products, 'search_query':search_query, 'user_role': user_role})
-
 @login_required(login_url='loginVendor')
 def editprofileVendor(request):
     page = 'editProfileVendor'
@@ -123,6 +96,10 @@ def editprofileVendor(request):
     context = {'form': form, 'vendor': vendor_v, 'user_role': user_role, 'page': page}
     return render(request, 'vendor/edit_product_shop_vendor_form.html', context)
 
+def newview(request):
+    page = 'newview'
+    return render(request, 'vendor/newview.html')
+
 
 def vendorProfile(request):
     page = 'vendorProfile'
@@ -130,6 +107,7 @@ def vendorProfile(request):
     vendor_user = vendor.objects.get(username=request.user.username)
     shops = vendor_user.shop_set.all()
     return render(request, 'vendor/vendorProfile.html', {'page':page, 'user_role':user_role, 'vendor_user':vendor_user, 'shops':shops})
+
 
 # --------------- Shop VIEWS ----------------------
 @login_required(login_url='loginVendor')
@@ -169,6 +147,94 @@ def editShop(request, pk):
 
     return render(request, 'vendor/edit_product_shop_vendor_form.html', {'form': form, 'user_role': user_role, 'page': page, 'shop_e': shop_e})
 
+
+@login_required(login_url='loginVendor')
+def deleteShop(request, pk):
+
+    shop_d = shop.objects.get(shop_id=pk)
+    if request.method == 'POST':
+        shop_d.delete()
+        messages.success(request, 'Shop was deleted successfully!')
+        return redirect('vendorprofile')
+
+    context = {'object': shop_d}
+    return render(request, 'delete_template.html', context)
+
+@login_required(login_url='loginVendor')
+def inventory(request, pk):
+    page = 'inventory'
+    user_role = 'vendor'
+
+    shop_p = shop.objects.get(shop_id=pk)
+    products, search_query = searchproducts(request, pk)
+    return render(request, 'vendor/shopview_inventory.html',
+                  {'page': page, 'shop': shop_p, 'products': products, 'search_query': search_query,
+                   'user_role': user_role})
+
+def shopview(request, pk):
+    page = 'shopview'
+    user_role = None
+    counter = 0
+
+    if request.user.is_authenticated:
+        try:
+            user_consumer = Customer.objects.get(username=request.user.username)
+            user_role = 'customer'
+        except:
+            user_consumer = vendor.objects.get(username=request.user.username)
+            user_role = 'vendor'
+        print(user_consumer)
+
+    print(user_role)
+    shop_n = shop.objects.get(shop_id=pk)
+    products, search_query = searchproducts(request, pk)
+    order_order = ''
+    check_order_id = request.session.get('order.id', None)
+    if check_order_id is None:
+        order_time = 'firsttime'
+        form = OrderIForm()
+        if counter == 0:
+            print("hello")
+            if request.method == 'POST':
+                print("hello1")
+                form = OrderIForm(request.POST)
+                form.order_status = 'Ongoing'
+                if form.is_valid():
+                    order = form.save(commit=False)
+                    counter = counter + 1
+                    order.user_id = user_consumer
+                    order.shop_id = shop_n
+                    order.save()
+                    request.session['order.id'] = str(order.order_id)
+                    print(shop.shop_name)
+                    print(order)
+                    order_order = request.session['order.id']
+
+    else:
+        order_time = 'oldtime'
+
+        order = Order.objects.get(order_id=request.session['order.id'])
+        order_order = request.session['order.id']
+        print(order)
+        print(order_time)
+        form = OrderIForm(instance=order)
+        if request.method == 'POST':
+            form = OrderIForm(request.POST, instance=order)
+            if form.is_valid():
+                order = form.save(commit=False)
+                order.save()
+                request.session['order.id'] = str(order.order_id)
+
+
+    newcount = None
+    if counter > 0:
+        newcount = True
+
+    return render(request, 'vendor/shopview_inventory.html', {'page':page, 'shop':shop_n, 'products':products, 'search_query':search_query, 'user_role': user_role, 'form': form, 'counter': counter, 'newcount': newcount, 'order_time': order_time, 'order_order':order_order})
+
+
+
+# --------------- Product VIEWS ----------------------
 @login_required(login_url='loginVendor')
 def createProduct(request, pk):
     page = 'createProduct'
@@ -222,6 +288,16 @@ def deleteProduct(request, pk):
     context = {'object': product}
     return render(request, 'delete_template.html', context)
 
+
+def orderhistory(request, pk):
+    page = 'orderhistory'
+    order_data , final_amount = finaltotal(request, pk)
+
+    return render(request, 'vendor/orderhistory.html', {'order_data': order_data,'final_total_amount':final_amount})
+
+
+
+
 #------ CART VIEWS ---->
 
 def create_ordetItem(request, pk):
@@ -237,11 +313,18 @@ def create_ordetItem(request, pk):
             cart.product_id = product.product_id
             cart.save()
 
+
 def productdetails(request,pk):
     user_role = 'customer'
     product = Product.objects.get(product_id=pk)
+    # cus = request.user
+    # shop = product.shop_id
+    # customer = Customer.objects.get(username=cus.username)
+    # order = Order.objects.get(shop_id=shop, user_id=customer, order_status='Ongoing')
     form = OrderIForm()
     print('orderitem kuch nahi')
+    # print(request.session['order.id'])
+    # print(request.session)
     check_order_id = request.session.get('order.id')
     print(check_order_id)
     if check_order_id is None:
@@ -252,7 +335,9 @@ def productdetails(request,pk):
             if form.is_valid():
                 messages.error(request, "Login First")
                 return redirect('loginUser')
+
     else:
+
         print('hello check')
         order = Order.objects.get(order_id=request.session['order.id'])
         check_order_item_id = request.session.get('order_item.id', None)
@@ -270,8 +355,11 @@ def productdetails(request,pk):
                     print(order_item.order_quantity)
                     order_item.save()
                     request.session['order_item.id'] = str(order_item.orderItem_id)
+
                     messages.success(request, "Added to cart successfully")
+
         else:
+
             print('orderitem second time')
             order_item = OrderItem.objects.get(orderItem_id=request.session['order_item.id'])
             form = Order_ind_form(instance=order_item)
@@ -283,14 +371,13 @@ def productdetails(request,pk):
                     order_item.order = order
                     print(order_item.order_quantity)
                     order_item.save()
+
                     messages.success(request, "Updated cart successfully")
+
+
     return render(request, 'vendor/productdetail.html', {'product':product, 'form':form, 'shop':shop, 'user_role':user_role})
 
-def orderhistory(request, pk):
-    page = 'orderhistory'
-    order_data , final_amount = finaltotal(request, pk)
 
-    return render(request, 'vendor/orderhistory.html', {'order_data': order_data,'final_total_amount':final_amount})
 
 @login_required(login_url='loginUser')
 def cart(request,pk):
@@ -311,3 +398,95 @@ def cart(request,pk):
                   {'orderwith_product':orderwith_product, 'orderitems':orderitems, 'page': page, 'no_of_items': no_of_items, 'order_item': order_item, 'delivery': delivery,
                    'orderitemamount': orderitemamount,'gst': gst, 'total': total, 'user_role': user_role})
 
+
+@login_required(login_url='loginUser')
+def clearcart(request,pk):
+    page = 'clearcart'
+
+    order = Order.objects.get(order_id=pk)
+    if request.method == 'POST':
+        order.id = request.session['order.id']
+        print(order.id)
+        order.id = None
+        request.session['order.id'] = order.id
+        order.delete()
+        messages.success(request, 'Cart cleared successfully!')
+        return redirect('homepage')
+
+    context = {'object': order}
+    return render(request, 'delete_template.html', context)
+
+
+
+@login_required(login_url='loginUser')
+def checkout(request, pk):
+    page = 'Checkout'
+    customer_c = Customer.objects.get(username=request.user.username)
+
+    if customer_c.address is None or customer_c.city is None or customer_c.zip_code is None:
+        messages.error(request, 'First Provide the complete Address!!!')
+        return redirect('customerprofile')
+    else:
+        order_item = Order.objects.get(order_id=pk, order_status='Ongoing')
+        orderitems =  order_item.orderitem_set.all()
+        no_of_items = len(order_item.orderitem_set.all())
+        delivery = 5
+        amount = 0
+        for orderitem in orderitems:
+            amount =amount+float(orderitem.amount)
+        print(amount)
+        order_item.total_amount = str(amount)
+        # amount = order_item.total_amount
+        gst = round(float(amount) * 0.13, 2)
+        total = gst + delivery + amount
+        user_role = 'customer'
+        order_item.save()
+        context = {'page': page,'no_of_items': no_of_items, 'order_item': order_item, 'delivery': delivery, 'amount': amount,
+                   'gst': gst, 'total': total, 'user_role':user_role, 'customer': customer_c}
+    return render(request, 'vendor/checkout.html',
+                  context)
+
+@login_required(login_url='loginUser')
+def checkout_confirmation(request, pk):
+    order = get_object_or_404(Order, order_id=pk)
+
+    if request.method == 'POST':
+        order.order_status = 'Placed'
+        order.id = request.session['order.id']
+        print(order.id)
+        order.id = None
+        request.session['order.id'] = order.id
+        order.save()
+        return redirect(reverse('confirmation', args=[order.order_id]))
+    else:
+        return redirect(reverse('checkout', args=[pk]))
+
+@login_required(login_url='loginUser')
+def confirmation(request,pk):
+    order = get_object_or_404(Order, order_id=pk)
+    page = 'Confirmation'
+    # order_item1 = Order.objects.get(order_id=pk,order_status='Placed')
+    user_role = "customer"
+    return render(request,'vendor/confirmation.html',{'order': order, 'user_role': user_role, 'page': page})
+
+
+@login_required(login_url='loginUser')
+def purchasehistory(request,pk):
+    page = 'Purchase History'
+    user_role = 'customer'
+    order_items = Order.objects.filter(user_id=pk)
+    order_items_final = order_items.exclude(order_status='ongoing')
+    print(order_items_final)
+    orders_with_final_amount = []
+    for order in order_items_final:
+        orderitems = order.orderitem_set.all()
+        amount=0
+        for orderitem in orderitems:
+            amount =amount+float(orderitem.amount)
+        order.total_amount = str(amount)
+        tax_amount = round(float(order.total_amount) * 1.13, 2)
+        finalamount = 5 + tax_amount
+        order.save()
+        no_of_items = len(order.orderitem_set.all())
+        orders_with_final_amount.append({'order': order, 'finalamount': finalamount,'no_of_items':no_of_items})
+    return render(request,'vendor/purchasehistory.html',{'orders_with_final_amount':orders_with_final_amount,'page': page,'user_role': user_role})

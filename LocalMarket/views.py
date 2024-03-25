@@ -4,18 +4,13 @@ from django.contrib.auth import login, authenticate, logout
 from django.http import HttpResponse
 from django.contrib import messages
 from vendor.models import shop, vendor
-from .forms import CustomerUserForm, ProfileForm
+from .forms import CustomerUserForm, ProfileForm, Cart_shopview, OrderIForm
 from django.contrib.auth import views as auth_views
 # Create your views here.
+# from vendor.forms import OrderIForm
 from django.contrib.auth.decorators import login_required
 from .utils import searchshops
-from .models import Customer
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from django.http import HttpResponse
-from LocalMarket.models import *
-from django.db.models import Sum
-from django.shortcuts import render
+from .models import Customer, Product, Order
 
 
 # class PasswordResetView(auth_views.PasswordResetView):
@@ -52,6 +47,7 @@ def loginUser(request):
             print('User does not exists')
             messages.error(request, "Username or Password is invalid!")
 
+
     return render(request,'LocalMarket/login-signup.html', {'page':page})
 
 def createUser(request):
@@ -79,11 +75,17 @@ def logoutUser(request):
 def homepage(request):
     page = 'homepage'
     user_role = None
-
+    order_current = None
     if request.user.is_authenticated:
         try:
             user_consumer = Customer.objects.get(username=request.user.username)
             user_role = 'customer'
+            check_order_id = request.session.get('order.id', None)
+            print(check_order_id)
+            if check_order_id is None:
+                print("You don't have any ongoing orders")
+            else:
+                order_current = check_order_id
         except:
             user_consumer = vendor.objects.get(username=request.user.username)
             user_role = 'vendor'
@@ -92,13 +94,26 @@ def homepage(request):
     # return render(request, 'navbar.html', {})
     print(user_role)
     print(request.user.username)
+
     shops_all = shop.objects.all()
     shops, search_query = searchshops(request)
     print(shops)
-    # return HttpResponse('<h1>This is homepage</h1>')
-    return render(request, '../templates/homepage.html', {'page':page, 'shops_all': shops_all, 'user_role': user_role, 'search_query': search_query, 'shops': shops})
 
-# Create your views here.
+    if request.user.is_authenticated:
+        customer = Customer.objects.get(username=request.user.username)
+
+
+    # return HttpResponse('<h1>This is homepage</h1>')
+    return render(request, '../templates/homepage.html', {'page':page, 'shops_all': shops_all, 'user_role': user_role, 'search_query': search_query, 'shops': shops, 'order_current': order_current})
+
+def empty_cart(request):
+    if request.user.is_authenticated:
+        messages.error(request, "You don't have any ongoing Order")
+        return redirect('homepage')
+    else:
+        messages.error(request, "Login First")
+        return redirect('loginUser')
+
 @login_required(login_url='loginUser')
 def customer_profile(request):
 
@@ -131,120 +146,34 @@ def edit_profile(request):
     context = {'form': form, 'customer': customer, 'user_role': user_role}
     return render(request, 'LocalMarket/profile_form.html', context)
 
+def aboutuspage(request):
+    return render(request, 'LocalMarket/aboutuspage.html')
+
+def contactuspage(request):
+    return render(request, 'LocalMarket/contactuspage.html')
+
+def termspage(request):
+    return render(request, 'LocalMarket/termspage.html')
+
+
 @login_required(login_url='loginUser')
-def checkout(request, pk):
-    page = 'Checkout'
-    order_item = Order.objects.get(order_id=pk, order_status='Ongoing')
+def orderdetails(request,pk):
+    page = 'Order Details'
+    user_role = 'customer'
+    order_item = Order.objects.get(order_id=pk)
+    orderitems = order_item.orderitem_set.all()
     no_of_items = len(order_item.orderitem_set.all())
     delivery = 5
-    amount = order_item.total_amount
-    gst = amount * 0.13
-    total = gst + delivery + amount
-    user_role = 'customer'
-    return render(request, 'LocalMarket/checkout.html',
-                  {'page': page,'no_of_items': no_of_items, 'order_item': order_item, 'delivery': delivery, 'amount': amount,
-                   'gst': gst, 'total': total, 'user_role':user_role})
-
-@login_required(login_url='loginUser')
-def checkout_confirmation(request, pk):
-    order = get_object_or_404(Order, order_id=pk, order_status='Ongoing')
-    if request.method == 'POST':
-        order.order_status = 'Placed'
-        order.save()
-        return redirect(reverse('confirmation'))
-    else:
-        return redirect(reverse('checkout', args=[pk]))
-
-@login_required(login_url='loginUser')
-def confirmation(request):
-    page = 'Confirmation'
-    # order_item1 = Order.objects.get(order_id=pk,order_status='Placed')
-    user_role = "customer"
-    return render(request,'LocalMarket/confirmation.html',{'user_role': user_role, 'page': page})
-
-
-@login_required(login_url='loginUser')
-def megacart(request):
-    page = 'Megacart'
-    customer = request.user
-    print(request.user)
-    customer_c = Customer.objects.get(username=customer)
-    all_orders = []
-    total_order = Order.objects.filter(user_id= customer_c.customer_id , order_status='Ongoing')
-    print(all_orders)
-    user_role = "customer"
-    return render(request,'LocalMarket/megacart.html',{'total_order':total_order, 'page': page, 'user_role': user_role})
-
-
-@login_required(login_url='loginUser')
-def megacart_confirmation(request, pk):
-    order = get_object_or_404(Order,order_id=pk, order_status='Ongoing')
-    if request.method == 'POST':
-        order.order_status = 'Cancelled' # order_delete
-        order.save()
-        return redirect(reverse('megacart'))
-
-def productdetails(request,pk):
-    product = Product.objects.get(product_id=pk)
-    return render(request,'LocalMarket/productdetail.html',{'product':product})
-
-@login_required(login_url='loginUser')
-def purchasehistory(request,pk):
-    page = 'Purchase History'
-    user_role = 'customer'
-    order_items = Order.objects.filter(user_id=pk)
-    order_items_final = order_items.exclude(order_status='ongoing')
-    print(order_items_final)
-    orders_with_final_amount = []
-    for order in order_items_final:
-        orderitems = order.orderitem_set.all()
-        amount=0
-        for orderitem in orderitems:
-            amount =amount+float(orderitem.amount)
-        order.total_amount = str(amount)
-        tax_amount = round(float(order.total_amount) * 1.13, 2)
-        finalamount = 5 + tax_amount
-        order.save()
-        no_of_items = len(order.orderitem_set.all())
-        orders_with_final_amount.append({'order': order, 'finalamount': finalamount,'no_of_items':no_of_items})
-    return render(request,'LocalMarket/purchasehistory.html',{'orders_with_final_amount':orders_with_final_amount,'page': page,'user_role': user_role})
-
-
-@login_required(login_url='loginUser')
-def checkout(request, pk):
-    page = 'Checkout'
-    order_item = Order.objects.get(order_id=pk, order_status='Ongoing')
-    orderitems =  order_item.orderitem_set.all()
-    no_of_items = len(order_item.orderitem_set.all())
-    delivery = 5
-    amount = 0
+    orderitemamount = 0
+    orderwith_product=[]
     for orderitem in orderitems:
-        amount =amount+float(orderitem.amount)
-    print(amount)
-    order_item.total_amount = str(amount)
-    # amount = order_item.total_amount
-    gst = round(float(amount) * 0.13, 2)
-    total = gst + delivery + amount
-    user_role = 'customer'
-    order_item.save()
-    return render(request, 'LocalMarket/checkout.html',
-                  {'page': page,'no_of_items': no_of_items, 'order_item': order_item, 'delivery': delivery, 'amount': amount,
-                   'gst': gst, 'total': total, 'user_role':user_role})
+        orderitemamount = orderitemamount + float(orderitem.amount)
+    print(orderitemamount)
+    gst = round(float(orderitemamount) * 0.13, 2)
+    total = gst + delivery + orderitemamount
+    return render(request, 'LocalMarket/orderdetails.html',
+                  {'orderwith_product':orderwith_product, 'orderitems':orderitems, 'page': page, 'no_of_items': no_of_items, 'order_item': order_item, 'delivery': delivery,
+                   'orderitemamount': orderitemamount,'gst': gst, 'total': total, 'user_role': user_role})
 
-@login_required(login_url='loginUser')
-def checkout_confirmation(request, pk):
-    order = get_object_or_404(Order, order_id=pk)
-    if request.method == 'POST':
-        order.order_status = 'Placed'
-        order.save()
-        return redirect(reverse('confirmation', args=[order.order_id]))
-    else:
-        return redirect(reverse('checkout', args=[pk]))
 
-@login_required(login_url='loginUser')
-def confirmation(request,pk):
-    order = get_object_or_404(Order, order_id=pk)
-    page = 'Confirmation'
-    # order_item1 = Order.objects.get(order_id=pk,order_status='Placed')
-    user_role = "customer"
-    return render(request,'LocalMarket/confirmation.html',{'order': order, 'user_role': user_role, 'page': page})
+
