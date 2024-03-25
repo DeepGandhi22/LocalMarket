@@ -4,8 +4,8 @@
     <div class="container-xl px-4 mt-4">
         <!-- Account page navigation-->
         <nav class="nav nav-borders">
-            <a class="nav-link active ms-0" href="https://www.bootdey.com/snippets/view/bs5-edit-profile-account-details" target="__blank" style="color: #64b496;">Profile</a>
-            <a class="nav-link" href="https://www.bootdey.com/snippets/view/bs5-profile-billing-page"  target="__blank"  style="color: #64b496;">Order History</a>
+            <a class="nav-link active ms-0" href="https://www.bootdey.com/snippets/view/bs5-edit-profile-account-details" target="__blank" style="color: orangered;">Profile</a>
+            <a class="nav-link" href="{% url 'purchasehistory' customer.customer_id %}"  target="__blank"  style="color: orangered;">Order History</a>
             <!-- <a class="nav-link" href="https://www.bootdey.com/snippets/view/bs5-profile-security-page" target="__blank">Security</a> -->
             <!-- <a class="nav-link" href="https://www.bootdey.com/snippets/view/bs5-edit-notifications-page"  target="__blank">Notifications</a> -->
         </nav>
@@ -40,19 +40,22 @@
                             <!-- Form Group (username)-->
                             <div class="mb-3">
                                 <label class="small mb-1" for="inputUsername">Username </label>
-                                <input class="form-control" id="inputUsername" type="text" placeholder="Enter your username" value="{{ customer.username }}">
+                                
+                                <h4 class="form-control" id="inputUsername" >{{ customer.username }} </h4>
                             </div>
                             <!-- Form Row-->
                             <div class="row gx-3 mb-3">
                                 <!-- Form Group (first name)-->
                                 <div class="col-md-6">
                                     <label class="small mb-1" for="inputFirstName">First name</label>
-                                    <input class="form-control" id="inputFirstName" type="text" placeholder="Enter your first name" value="{{ customer.first_name }}">
+                                    <h4 class="form-control" id="inputFirstname" >{{ customer.first_name }} </h4>
+                                    
                                 </div>
                                 <!-- Form Group (last name)-->
                                 <div class="col-md-6">
                                     <label class="small mb-1" for="inputLastName">Last name</label>
-                                    <input class="form-control" id="inputLastName" type="text" placeholder="Enter your last name" value="{{ customer.last_name }}">
+                                    <h4 class="form-control" id="inputLastName" >{{ customer.last_name }} </h4>
+                          
                                 </div>
                             </div>
                             <!-- Form Row        -->
@@ -60,23 +63,26 @@
                                 <!-- Form Group (organization name)-->
                                 <div class="col-md-6">
                                     <label class="small mb-1" for="inputOrgName">Address</label>
-                                    <input class="form-control" id="inputOrgName" type="text" placeholder="Enter your address" value="{{ customer.address }}">
+                                    <h4 class="form-control" id="inputOrgName" >{{ customer.address }} </h4>
+                                   
                                 </div>
                                 <!-- Form Group (location)-->
                                 <div class="col-md-6">
                                     <label class="small mb-1" for="inputLocation">City</label>
-                                    <input class="form-control" id="inputLocation" type="text" placeholder="Enter your city" value="{{ customer.city }}">
+                                    <h4 class="form-control" id="inputLocation" >{{ customer.city }} </h4>
                                 </div>
                             </div>
                             <!-- Form Group (email address)-->
                             <div class="row gx-3 mb-3">
                                 <div class="col-md-6">
                                     <label class="small mb-1" for="inputLocation">Postal code</label>
-                                    <input class="form-control" id="inputLocation" type="text" placeholder="Enter your postal code" value="{{ customer.zip_code }}">
+                                    <h4 class="form-control" id="inputLocation" >{{ customer.zip_code }} </h4>
+                                    
                                 </div>
                                 <div class="col-md-6">
                                     <label class="small mb-1" for="inputEmailAddress">Email address</label>
-                                    <input class="form-control" id="inputEmailAddress" type="email" placeholder="Enter your email address" value="{{ customer.email }}">
+                                    <h4 class="form-control" id="inputEmailAddress" >{{ customer.email }} </h4>
+                                    
                                 </div>
                                
                             </div>
@@ -85,7 +91,8 @@
                                 <!-- Form Group (phone number)-->
                                 <div class="col-md-6">
                                     <label class="small mb-1" for="inputPhone">Phone number</label>
-                                    <input class="form-control" id="inputPhone" type="tel" placeholder="Enter your phone number" value="{{ customer.phone_number }}">
+                                    <h4 class="form-control" id="inputEmailAddress" >{{ customer.phone_number }} </h4>
+                                    
                                 </div>
                                 <!-- Form Group (birthday)-->
                                 <!-- <div class="col-md-6">

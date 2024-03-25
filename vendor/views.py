@@ -66,7 +66,7 @@ def createVendor(request):
             user.username = user.username.lower()
             user.save()
 
-            login(request, user)
+            messages.success(request, "Vendor created successfully")
             print(user)
             return redirect("loginVendor")
         else:
@@ -119,13 +119,13 @@ def createShop(request):
 
     form = ShopForm()
     if request.method == 'POST':
-        form = ShopForm(request.POST)
+        form = ShopForm(request.POST, request.FILES)
         if form.is_valid():
             shop = form.save(commit=False)
             shop.vendor_id = vendor_shop
             shop.save()
             messages.success(request, 'Shop was added successfully!')
-            return redirect('homepage')
+            return redirect('vendorprofile')
 
     return render(request, 'vendor/create_shop_product.html', {'page':page, 'form':form, 'user_role': user_role})
 
@@ -150,14 +150,14 @@ def editShop(request, pk):
 
 @login_required(login_url='loginVendor')
 def deleteShop(request, pk):
-
+    user_role = 'vendor'
     shop_d = shop.objects.get(shop_id=pk)
     if request.method == 'POST':
         shop_d.delete()
         messages.success(request, 'Shop was deleted successfully!')
         return redirect('vendorprofile')
 
-    context = {'object': shop_d}
+    context = {'object': shop_d, 'user_role': user_role}
     return render(request, 'delete_template.html', context)
 
 @login_required(login_url='loginVendor')
@@ -245,7 +245,7 @@ def createProduct(request, pk):
 
     form = ProductForm()
     if request.method == 'POST':
-        form = ProductForm(request.POST)
+        form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
             product.shop_id = shop_p
@@ -262,38 +262,42 @@ def editProduct(request, pk):
     page = 'editProduct'
     user_role = 'vendor'
     product = Product.objects.get(product_id=pk)
+    print(product.shop_id)
+    shop_p = product.shop_id
     form = ProductForm(instance=product)
 
     if request.method == 'POST':
-        form = ProductForm(request.POST, instance=product)
+        form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             form.save()
 
             messages.success(request, 'Changes saved successfully.')
-            return redirect('vendorprofile')
+            return redirect('shopview', pk=shop_p.shop_id)
 
 
-    return render(request, 'vendor/edit_product_shop_vendor_form.html', {'form': form, 'user_role': user_role, 'page': page})
+    return render(request, 'vendor/edit_product_shop_vendor_form.html', {'form': form, 'user_role': user_role, 'page': page, 'product':product})
 
 
 @login_required(login_url='loginVendor')
 def deleteProduct(request, pk):
-
+    user_role ='vendor'
+    page = 'deleteProduct'
     product = Product.objects.get(product_id=pk)
     if request.method == 'POST':
         product.delete()
         messages.success(request, 'Skill was deleted successfully!')
         return redirect('vendorprofile')
 
-    context = {'object': product}
+    context = {'object': product, 'user_role': user_role}
     return render(request, 'delete_template.html', context)
 
 
 def orderhistory(request, pk):
     page = 'orderhistory'
+    user_role = 'vendor'
     order_data , final_amount = finaltotal(request, pk)
 
-    return render(request, 'vendor/orderhistory.html', {'order_data': order_data,'final_total_amount':final_amount})
+    return render(request, 'vendor/orderhistory.html', {'order_data': order_data,'final_total_amount':final_amount, 'user_role': user_role, 'page': page})
 
 
 
@@ -302,7 +306,6 @@ def orderhistory(request, pk):
 
 def create_ordetItem(request, pk):
     page = 'shopview'
-
     form = Cart_shopview()
     product = Product.objects.get(product_id=pk)
 
@@ -340,9 +343,31 @@ def productdetails(request,pk):
 
         print('hello check')
         order = Order.objects.get(order_id=request.session['order.id'])
-        check_order_item_id = request.session.get('order_item.id', None)
-        print(check_order_item_id)
-        if check_order_item_id is None:
+        try:
+            order_item = OrderItem.objects.get(order=order, product_id=pk)
+            print('orderitem second time')
+            # order_item = OrderItem.objects.get(orderItem_id=request.session['order_item.id'])
+            # order_item = OrderItem.objects.get(product_id=pk)
+            form = Order_ind_form(instance=order_item)
+            if request.method == 'POST':
+                form = Order_ind_form(request.POST, instance=order_item)
+                if form.is_valid():
+                    order_item = form.save(commit=False)
+                    if order_item.order_quantity <= product.quantity:
+
+                        product.quantity = product.quantity - order_item.order_quantity
+                        order_item.product_id = product
+                        order_item.order = order
+
+                        print(order_item.order_quantity)
+                        order_item.save()
+                        product.save()
+
+                        messages.success(request, "Updated cart successfully")
+                    else:
+                        messages.error(request, 'Quantity is more than avialable in Inventory')
+
+        except:
 
             print('orderfirst time////')
             form = Order_ind_form()
@@ -350,30 +375,17 @@ def productdetails(request,pk):
                 form = Order_ind_form(request.POST)
                 if form.is_valid():
                     order_item = form.save(commit=False)
-                    order_item.product_id = product
-                    order_item.order = order
-                    print(order_item.order_quantity)
-                    order_item.save()
-                    request.session['order_item.id'] = str(order_item.orderItem_id)
-
-                    messages.success(request, "Added to cart successfully")
-
-        else:
-
-            print('orderitem second time')
-            order_item = OrderItem.objects.get(orderItem_id=request.session['order_item.id'])
-            form = Order_ind_form(instance=order_item)
-            if request.method == 'POST':
-                form = Order_ind_form(request.POST, instance=order_item)
-                if form.is_valid():
-                    order_item = form.save(commit=False)
-                    order_item.product_id = product
-                    order_item.order = order
-                    print(order_item.order_quantity)
-                    order_item.save()
-
-                    messages.success(request, "Updated cart successfully")
-
+                    if order_item.order_quantity <= product.quantity:
+                        product.quantity = product.quantity - order_item.order_quantity
+                        order_item.product_id = product
+                        order_item.order = order
+                        print(order_item.order_quantity)
+                        order_item.save()
+                        product.save()
+                        # request.session['order_item.id'] = str(order_item.orderItem_id)
+                        messages.success(request, "Added to cart successfully")
+                    else:
+                        messages.error(request, 'Quantity is more than available in Inventory')
 
     return render(request, 'vendor/productdetail.html', {'product':product, 'form':form, 'shop':shop, 'user_role':user_role})
 
@@ -402,18 +414,22 @@ def cart(request,pk):
 @login_required(login_url='loginUser')
 def clearcart(request,pk):
     page = 'clearcart'
-
+    user_role = 'customer'
     order = Order.objects.get(order_id=pk)
     if request.method == 'POST':
         order.id = request.session['order.id']
         print(order.id)
         order.id = None
         request.session['order.id'] = order.id
+        for orderitem in order.orderitem_set.all():
+            product = Product.objects.get(product_id=orderitem.product_id.product_id)
+            product.quantity = product.quantity + orderitem.order_quantity
+            product.save()
         order.delete()
         messages.success(request, 'Cart cleared successfully!')
         return redirect('homepage')
 
-    context = {'object': order}
+    context = {'object': order, 'user_role': user_role}
     return render(request, 'delete_template.html', context)
 
 
@@ -490,3 +506,14 @@ def purchasehistory(request,pk):
         no_of_items = len(order.orderitem_set.all())
         orders_with_final_amount.append({'order': order, 'finalamount': finalamount,'no_of_items':no_of_items})
     return render(request,'vendor/purchasehistory.html',{'orders_with_final_amount':orders_with_final_amount,'page': page,'user_role': user_role})
+
+
+def orderhistory(request, pk):
+    user_role ='vendor'
+    page = 'orderhistory'
+    order_data , final_amount, total_final_amount = finaltotal(request, pk)
+    total_orders = len(order_data)
+
+    return render(request, 'vendor/orderhistory.html', {'user_role': user_role, 'order_data': order_data,'final_total_amount':final_amount, 'total_orders':total_orders,'total_earnings':total_final_amount})
+
+

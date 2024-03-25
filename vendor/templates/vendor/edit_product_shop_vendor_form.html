@@ -18,7 +18,8 @@
                     <div class="card-header">Product Picture</div>
                     <div class="card-body text-center">
                         <!-- Profile picture image-->
-                        <img class="img-account-profile rounded-circle mb-2" src="" alt="" style="width: 300px; height: 300px;">
+                    <img class="img-account-profile rounded-circle mb-2" src="{{ product.product_image.url }}" alt="" style="width: 300px; height: 300px;">
+                        {{ form.product_image }}
 
                         <div class="center " style="margin-left: 90px;" >
                                 <button type="submit" class="cr-button mt-30" style="background-color: orangered; border-color: red">Submit Changes</button>
@@ -35,7 +36,7 @@
                             {% csrf_token %}
                             <!-- Form Group (username)-->
                             {% for field in form %}
-                                {% if field != form.profile_image %}
+                                {% if field != form.product_image %}
                                     <div class="row gx-3 mb-3">
                                 <!-- Form Group (first name)-->
                                         <div class="col-md-6">

@@ -4,50 +4,6 @@
     Author: ashishmaraviya
     Version: 2.0
     Copyright 2024
-
------------------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------------
-    Included CSS INDEX
------------------------------------------------------------------------------------
-
-01. Typography
-
-02. Utilities
-    - Variables
-    - Mixins
-
-03. Components
-    - Common
-
-04. layout
-    - Header
-    - Footer
-
-05. pages 
-   - Hero
-   - Categories
-   - Product-banner
-   - Popular-product
-   - Deal
-   - Testimonial
-   - Blog
-   - Product-page
-   - Shop
-   - Blog-classic
-   - Blog-details
-   - Faq
-   - About
-   - Services
-   - Cart
-   - Login
-   - Register
-   - Elements-products
-   - Elements-typography
-   - Wishlist
-   - Track order
-   - Checkout
-   - Terms Policy
-
 -----------------------------------------------------------------------------------*/
 /* Typography */
 /* Typography */
@@ -338,9 +294,11 @@ p {
   font-weight: bold;
   text-transform: capitalize;
   line-height: 1.2;
-  background-color: #64b496;
+  /*background-color: #64b496;*/
+  background-color: orangered;
   color: #fff;
-  border: 1px solid #64b496;
+  /*border: 1px solid #64b496;*/
+  border: 1px solid orangered;
   border-radius: 5px;
   display: -webkit-box;
   display: -ms-flexbox;

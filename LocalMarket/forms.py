@@ -1,7 +1,9 @@
-from django.forms import ModelForm
-from .models import Customer
+# from django.forms import ModelForm
+from django import forms
+from .models import Customer, OrderItem, Order
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+
 
 
 class CustomerUserForm(UserCreationForm):
@@ -15,3 +17,32 @@ class CustomerUserForm(UserCreationForm):
 
         for name, field in self.fields.items():
             field.widget.attrs.update({'class': 'cr-form-control'})
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Customer
+        fields = ['username', 'email', 'first_name', 'last_name', 'phone_number', 'profile_image', 'address', 'city', 'zip_code']
+
+    def __init__(self, *args, **kwargs):
+        super(ProfileForm, self).__init__(*args, **kwargs)
+
+        for name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})
+
+class Cart_shopview(forms.ModelForm):
+    class Meta:
+        model = OrderItem
+        fields = ['order_quantity']
+
+    def __init__(self, *args, **kwargs):
+        super(Cart_shopview, self).__init__(*args, **kwargs)
+
+
+class OrderIForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = ['order_status', 'shop_id']
+        widgets = {
+            'order_status': forms.HiddenInput(),
+            'shop_id': forms.HiddenInput(), # Add this line to include shop_id as a hidden field
+        }

@@ -76,6 +76,7 @@ def homepage(request):
     page = 'homepage'
     user_role = None
     order_current = None
+
     if request.user.is_authenticated:
         try:
             user_consumer = Customer.objects.get(username=request.user.username)
@@ -98,10 +99,6 @@ def homepage(request):
     shops_all = shop.objects.all()
     shops, search_query = searchshops(request)
     print(shops)
-
-    if request.user.is_authenticated:
-        customer = Customer.objects.get(username=request.user.username)
-
 
     # return HttpResponse('<h1>This is homepage</h1>')
     return render(request, '../templates/homepage.html', {'page':page, 'shops_all': shops_all, 'user_role': user_role, 'search_query': search_query, 'shops': shops, 'order_current': order_current})
@@ -147,13 +144,41 @@ def edit_profile(request):
     return render(request, 'LocalMarket/profile_form.html', context)
 
 def aboutuspage(request):
-    return render(request, 'LocalMarket/aboutuspage.html')
+    user_role = None
+    if request.user.is_authenticated:
+        try:
+            user_consumer = Customer.objects.get(username=request.user.username)
+            user_role = 'customer'
+        except:
+            user_consumer = vendor.objects.get(username=request.user.username)
+            user_role = 'vendor'
+        print(user_consumer)
+    return render(request, 'LocalMarket/aboutuspage.html', {'user_role': user_role})
 
 def contactuspage(request):
-    return render(request, 'LocalMarket/contactuspage.html')
+    user_role = None
+    if request.user.is_authenticated:
+        try:
+            user_consumer = Customer.objects.get(username=request.user.username)
+            user_role = 'customer'
+        except:
+            user_consumer = vendor.objects.get(username=request.user.username)
+            user_role = 'vendor'
+        print(user_consumer)
+
+    return render(request, 'LocalMarket/contactuspage.html', {'user_role': user_role})
 
 def termspage(request):
-    return render(request, 'LocalMarket/termspage.html')
+    user_role = None
+    if request.user.is_authenticated:
+        try:
+            user_consumer = Customer.objects.get(username=request.user.username)
+            user_role = 'customer'
+        except:
+            user_consumer = vendor.objects.get(username=request.user.username)
+            user_role = 'vendor'
+        print(user_consumer)
+    return render(request, 'LocalMarket/termspage.html', {'user_role': user_role})
 
 
 @login_required(login_url='loginUser')

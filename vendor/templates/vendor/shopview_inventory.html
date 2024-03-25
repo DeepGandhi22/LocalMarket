@@ -2,8 +2,40 @@
 {% load static %}
 {% block content %}
 
+
+
     <!-- Shop -->
     <section class="section-shop padding-tb-100">
+     {% if request.user.is_authenticated and user_role == 'customer'%}
+                        {% if order_time == 'oldtime' %}
+                        <form method="POST" action="{% url 'cart' order_order %}">
+                          {% csrf_token %}
+                            <div class="cr-product-banner-buttons pb-3" style="text-align: center; align-items: center">
+                               <div style="display: none;">
+                                {{ form.as_p }}
+                               </div>
+                                <button type="submit" class="cr-button" style="background-color: orangered; border-color: red; margin: auto " >End Shopping</button>
+{#                              <a href="{% url 'shopview' shop.shop_id %}" class="cr-button"></a>#}
+                            </div>
+
+                        </form>
+                        {% elif order_time == 'firsttime' %}
+
+                        <form method="POST" action="">
+                          {% csrf_token %}
+                            <div class="cr-product-banner-buttons pb-3" style="text-align: center; align-items: center">
+                               <div style="display: none;">
+                                {{ form.as_p }}
+                               </div>
+                                <button type="submit" class="cr-button" style="background-color: orangered; border-color: red; margin: auto;" >Start Shopping</button>
+{#                              <a href="{% url 'shopview' shop.shop_id %}" class="cr-button"></a>#}
+                            </div>
+                        </form>
+                        {% endif %}
+
+     {% else %}
+
+     {% endif %}
         <div class="container">
             <div class="row d-none">
                 <div class="col-lg-12">
@@ -24,9 +56,7 @@
                         <div class="col-12">
                             <div class="cr-shop-bredekamp">
                                 <div class="cr-toggle">
-                                    <a href="javascript:void(0)" class="shop_side_view">
-                                        <i class="ri-filter-line"></i>
-                                    </a>
+
                                     <a href="javascript:void(0)" class="gridCol active-grid">
                                         <i class="ri-grid-line"></i>
                                     </a>
@@ -35,19 +65,19 @@
                                     </a>
                                 </div>
                                 <div class="center-content">
-                                    <span>We found 29 items for you!</span>
+                                    <span></span>
                                 </div>
-                                <div class="cr-select">
-                                    <label>Sort By :</label>
-                                    <select class="form-select" aria-label="Default select example">
-                                        <option selected>Featured</option>
-                                        <option value="1">One</option>
-                                        <option value="2">Two</option>
-                                        <option value="3">Three</option>
-                                        <option value="4">Four</option>
-                                        <option value="5">Five</option>
-                                    </select>
-                                </div>
+{#                                <div class="cr-select">#}
+{#                                    <label>Sort By :</label>#}
+{#                                    <select class="form-select" aria-label="Default select example">#}
+{#                                        <option selected>Featured</option>#}
+{#                                        <option value="1">One</option>#}
+{#                                        <option value="2">Two</option>#}
+{#                                        <option value="3">Three</option>#}
+{#                                        <option value="4">Four</option>#}
+{#                                        <option value="5">Five</option>#}
+{#                                    </select>#}
+{#                                </div>#}
                             </div>
                         </div>
                     </div>
@@ -58,12 +88,14 @@
                             <div class="cr-product-card">
                                 <div class="cr-product-image">
                                     <div class="cr-image-inner">
-                                        <img src="{% static 'uploaded/shoppics/vendorShop.jpeg' %}" alt="product-1">
+                                        <a href="{% url 'productdetails' product.product_id %}">
+                                        <img src="{{ product.product_image.url }}" alt="product-1" style = "width: 200px; height:200px">
+                                        </a>
                                     </div>
 
-                                    <a class="cr-shopping-bag" href="javascript:void(0)">
-                                        <i class="ri-shopping-bag-line"></i>
-                                    </a>
+{#                                    <a class="cr-shopping-bag" href="javascript:void(0)">#}
+{#                                        <i class="ri-shopping-bag-line"></i>#}
+{#                                    </a>#}
                                 </div>
                                 <div class="cr-product-details">
                                     <div class="cr-brand">
@@ -77,7 +109,7 @@
 {#                                            <p>(4.5)</p>#}
 {#                                        </div>#}
                                     </div>
-                                {% if user_role == 'customer' %}
+                                    {% if user_role == 'customer' %}
                                     <a href="{% url 'productdetails' product.product_id %}" class="title">{{ product.product_name }}</a>
                                     {% else %}
                                     <a href="" class="title">{{ product.product_name }}</a>
@@ -95,7 +127,7 @@
 
                                                         <div class="row">
                                                             <div class="col">
-                                                                <a href="{% url 'edit   product' product.product_id %}">
+                                                                <a href="{% url 'editproduct' product.product_id %}">
                                                                     <button type="button" class="cr-button "> Edit </button>
                                                                 </a>
                                                             </div>
@@ -108,6 +140,35 @@
                                                         </div>
                                                 </div>
                                             </div>
+                                    {% else %}
+
+                                                <div class="cr-add-card" style="width: 100%; padding-left: 28%; padding-top: 4px">
+{#                                                        <div class="row">#}
+{#                                                            <div class="col">#}
+{#                                                                      <div class="cr-qty-main" style="width: 100px; padding-top: 5px;" >#}
+{#                                                                            <input type="text" placeholder="." value="1" minlength="1" maxlength="20" class="quantity" style="width: 30px; border-radius: 8px;" >#}
+{#                                                                            <button type="button" class="plus" style="border-radius: 8px">+</button>#}
+{#                                                                            <button type="button" class="minus" style="border-radius: 8px">-</button>#}
+{#                                                                      </div>#}
+{#                                                            </div>#}
+{##}
+{#                                                            <div class="col" style="">#}
+{#                                                                    <div class="cr-add-button">#}
+{#                                                                        <button type="button" class="cr-button cr-shopping-bag">Add to cart</button>#}
+{#                                                                    </div>#}
+{#                                                            </div>#}
+{#                                                        </div>#}
+
+                                                {% if newcount is not None or order_time == 'oldtime' %}
+                                                    <div class="cr-add-button">
+                                                    <a href="{% url 'productdetails' product.product_id %}">
+                                                        <button type="button" class="cr-button">Add to cart</button>
+                                                        </a>
+                                                    </div>
+                                                {%  endif  %}
+
+                                                </div>
+
                                     {% endif %}
 {#                                        <span class="old-price">$123.25</span></p>#}
                                 </div>
@@ -131,21 +192,7 @@
                     </div>
 
                 {% endif %}
-                    <nav aria-label="..." class="cr-pagination">
-                        <ul class="pagination">
-                            <li class="page-item disabled">
-                                <span class="page-link">Previous</span>
-                            </li>
-                            <li class="page-item active" aria-current="page">
-                                <span class="page-link">1</span>
-                            </li>
-                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                            <li class="page-item"><a class="page-link" href="#">3</a></li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">Next</a>
-                            </li>
-                        </ul>
-                    </nav>
+
                 </div>
             </div>
         </div>

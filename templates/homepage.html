@@ -5,7 +5,7 @@
 {#      <h1>CUSOTMER</h1>#}
 {#  {% endif %}#}
     <!-- Hero slider -->
-    <section class="section-hero padding-b-100 next">
+       <section class="section-hero padding-b-50 next">
         <div class="cr-slider swiper-container">
             <div class="swiper-wrapper">
                 <div class="swiper-slide">
@@ -14,11 +14,9 @@
                             <div class="row">
                                 <div class="col-lg-12">
                                     <div class="cr-left-side-contain slider-animation">
-                                        <h5><span>100%</span> Organic Fruits</h5>
-                                        <h1>Explore fresh & juicy fruits.</h1>
-                                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Amet reiciendis
-                                            beatae consequuntur.</p>
-
+                                         <h5><span>Bringing your community closer</span></h5>
+                                        <h1>Shop local, shop smart with NearYou</h1>
+                                        <p>Why travel far when the best finds are right here? NearYou brings local shopping to your fingertips!</p>
                                     </div>
                                 </div>
                             </div>
@@ -31,17 +29,16 @@
                             <div class="row">
                                 <div class="col-lg-12">
                                     <div class="cr-left-side-contain slider-animation">
-                                        <h5><span>100%</span> Organic Vegetables</h5>
-                                        <h1>The best way to stuff your wallet.</h1>
-                                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Amet reiciendis
-                                            beatae consequuntur.</p>
-
+                                        <h5><span>Find your favorites with just a click</span></h5>
+                                        <h1>From couch to checkout</h1>
+                                        <p>Enjoy the simplicity of nature's bounty with our carefully selected harvest, delivering wholesome goodness straight to your home.</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
             <div class="swiper-pagination"></div>
         </div>
@@ -68,12 +65,13 @@
                 <div class="cr-product-banner">
                   <img
                     src="{{ shop.shop_image.url }}"
-                    alt="product-banner"
+                    alt="product-banner" style="width: 500px; height: 300px"
                   />
                   <div class="cr-product-banner-content">
                     <h5>{{ shop.shop_name }}</h5>
+                      <p>{{ shop.shop_address }}</p>
 {#                    <p><span class="percent">30%</span> Off on first order</p>#}
-                        <div class="cr-product-banner-buttons" style="text-align: center;">
+                        <div class="cr-product-banner-buttons pt-2" style="display:flex; justify-content:center;text-align: center;">
                             <a href="{% url 'shopview' shop.shop_id %}" class="cr-button" style="background-color: orangered; color: white; border-color: darkorange; width: 150px; height: 40px; display: inline-block;">Shop Now</a>
                         </div>
 

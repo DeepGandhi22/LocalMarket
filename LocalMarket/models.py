@@ -7,13 +7,12 @@ from django.core.validators import RegexValidator
 from vendor.models import shop
 
 
-
-
 # Create your models here.
 class Product(models.Model):
     product_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     shop_id = models.ForeignKey(shop, on_delete=models.CASCADE, default=None)
     product_name = models.CharField(max_length=200)
+    product_image = models.ImageField(null=True, blank=True, upload_to='shoppics/', default="shoppics/vendorShop.jpeg")
     category_choices = [('food_bevarages', 'Food and Bevarages'), ('fruits_veg', 'Fruits and Vegetables'), ('dairy', 'Dairy'), ('other', 'Other') ]
     category = models.CharField(max_length=14,choices=category_choices, default=None)
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(0)])
@@ -28,33 +27,27 @@ class Customer(User):
     phone_regex = (RegexValidator
                    (regex=r'^\d{10}$',
                     message="The phone number should be of 10 digits long"))
-
+    profile_image = models.ImageField(
+        null=True, blank=True, upload_to='userprofiles/', default="userprofiles/user-default.png")
     phone_number = models.CharField(validators=[phone_regex], max_length=10, null=True, blank=True)
-    address = models.CharField(max_length=200, default=None)
-    city = models.CharField(max_length=100, default=None)
-    zip_code = models.CharField(max_length=20, default=None)
+    address = models.CharField(max_length=200, default=None, null=True, blank=True)
+    city = models.CharField(max_length=100, default=None, null=True, blank=True)
+    zip_code = models.CharField(max_length=20, default=None, null=True, blank=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
 class Order(models.Model):
     order_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    shop_id = models.ForeignKey(shop, on_delete=models.CASCADE)
+    shop_id = models.ForeignKey(shop, on_delete=models.CASCADE, null=True, blank=True)
+    user_id = models.ForeignKey(Customer, on_delete=models.CASCADE)
     order_status_choices = [('Ongoing', 'Ongoing'), ('Cancelled', 'Cancelled'), ('Placed', 'Placed'), ('Shipped', 'Shipped'), ('Delivered', 'Delivered')]
     order_status = models.CharField(max_length=9, choices=order_status_choices, default='Ongoing')
     total_amount = models.FloatField(validators=[MinValueValidator(0)], null=True, blank=True)
-    user_id = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    delivery_address = models.CharField(max_length=200, default=None)
-    delivery_city = models.CharField(max_length=100, default=None)
-    delivery_zip_code = models.CharField(max_length=20, default=None)
+
     def __str__(self):
         return self.user_id.first_name + " " + self.total_amount.__str__()
 
-    def save(self, *args, **kwargs):
-        self.delivery_address = self.user_id.address
-        self.delivery_city = self.user_id.city
-        self.delivery_zip_code = self.user_id.zip_code
-        super().save(*args, **kwargs)
 
 
 class OrderItem(models.Model):
